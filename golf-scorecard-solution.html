@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#15803d">
+    <title>Sandbagger - Golf Scorecard Solution</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="public/icons/icon-192x192.png">
+    <style>
+        /* Base styles */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+            overscroll-behavior-y: contain;
+        }
+
+        .container {
+            max-width: 1024px;
+            margin: 0 auto;
+            padding: 0.5rem;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #15803d; /* green-700 */
+            margin-bottom: 0.25rem;
+        }
+
+        p {
+            color: #4b5563; /* gray-700 */
+            margin-top: 0;
+            font-size: 0.875rem;
+        }
+
+        .header {
+            margin-bottom: 1rem;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+        .tab {
+            padding: 0.5rem 1rem;
+            margin: 0 0.25rem;
+            background-color: #e5e7eb; /* gray-200 */
+            border-radius: 0.25rem;
+            cursor: pointer;
+            border: none;
+            font-size: 0.875rem;
+        }
+
+        .tab.active {
+            background-color: #16a34a; /* green-600 */
+            color: white;
+        }
+
+        /* Scorecard styles */
+        .scorecard-container {
+            margin-top: 1rem;
+        }
+
+        .scorecard-header {
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Swipe navigation for scorecard */
+        .scorecard-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .scorecard-nav-btn {
+            background-color: #16a34a;
+            color: white;
+            border: none;
+            border-radius: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .scorecard-view-label {
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        .scorecard {
+            overflow-x: auto;
+            border-radius: 0.25rem;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Compact mobile view */
+        .scorecard-compact {
+            display: block;
+        }
+
+        .scorecard-full {
+            display: none;
+        }
+
+        @media (min-width: 768px) {
+            .scorecard-compact {
+                display: none;
+            }
+            
+            .scorecard-full {
+                display: block;
+            }
+            
+            .scorecard-nav {
+                display: none;
+            }
+            
+            h1 {
+                font-size: 1.875rem;
+            }
+            
+            p {
+                font-size: 1rem;
+            }
+            
+            .scorecard-header {
+                font-size: 1.25rem;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 0.375rem 0.25rem;
+            border: 1px solid #e5e7eb;
+            text-align: center;
+            font-size: 0.875rem;
+        }
+
+        @media (min-width: 768px) {
+            th, td {
+                padding: 0.5rem;
+                font-size: 1rem;
+            }
+        }
+
+        thead th {
+            background-color: #dcfce7; /* green-100 */
+        }
+
+        thead tr:nth-child(2) th,
+        thead tr:nth-child(3) th {
+            background-color: #f0fdf4; /* green-50 */
+        }
+
+        tbody th {
+            background-color: #f0fdf4; /* green-50 */
+            text-align: left;
+        }
+
+        .hole-number {
+            width: 2.5rem;
+        }
+
+        .score-input {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: transparent;
+            text-align: center;
+            -webkit-appearance: none;
+            -moz-appearance: textfield;
+            font-size: 0.875rem;
+        }
+
+        @media (min-width: 768px) {
+            .score-input {
+                font-size: 1rem;
+            }
+        }
+
+        /* Hide arrows on number inputs */
+        .score-input::-webkit-inner-spin-button, 
+        .score-input::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+
+        .strokes-dot {
+            position: absolute;
+            top: 0;
+            right: 2px;
+            color: #ef4444; /* red-500 */
+            font-size: 0.75rem;
+        }
+
+        .total-score {
+            font-weight: 700;
+        }
+
+        /* Player management styles */
+        .player-management {
+            background-color: white;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .player-form {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.25rem;
+            font-size: 16px; /* Prevents zoom on iOS */
+            -webkit-appearance: none; /* Remove default styling */
+        }
+
+        button {
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 0.5rem 0;
+            background-color: #16a34a; /* green-600 */
+            color: white;
+            border: none;
+            border-radius: 0.25rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            font-size: 16px;
+        }
+
+        .btn-secondary {
+            background-color: #e5e7eb; /* gray-200 */
+            color: #4b5563; /* gray-700 */
+        }
+
+        .player-list {
+            margin-top: 1rem;
+        }
+
+        .player-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background-color: #f9fafb; /* gray-50 */
+            border-radius: 0.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .player-name {
+            font-weight: 500;
+        }
+
+        .player-handicap {
+            font-size: 0.875rem;
+            color: #4b5563; /* gray-600 */
+            margin-left: 0.5rem;
+        }
+
+        .player-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-sm {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .btn-edit {
+            background-color: #16a34a; /* green-600 */
+            color: white;
+            border: none;
+            border-radius: 0.25rem;
+        }
+
+        .btn-delete {
+            background-color: #ef4444; /* red-500 */
+            color: white;
+            border: none;
+            border-radius: 0.25rem;
+        }
+
+        /* Hole info and bet tracker styles */
+        .info-section {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .info-section {
+                grid-template-columns: 1fr 1fr;
+                gap: 1.5rem;
+                margin-top: 1.5rem;
+            }
+        }
+
+        .info-card {
+            background-color: white;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .info-card-header {
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .hole-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.375rem;
+            margin-bottom: 1rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .hole-button {
+            width: 1.75rem;
+            height: 1.75rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #e5e7eb; /* gray-200 */
+            border: none;
+            font-size: 0.75rem;
+        }
+
+        @media (min-width: 768px) {
+            .hole-button {
+                width: 2rem;
+                height: 2rem;
+                font-size: 0.875rem;
+            }
+            
+            .hole-selector {
+                gap: 0.5rem;
+            }
+        }
+
+        .hole-button.active {
+            background-color: #16a34a; /* green-600 */
+            color: white;
+        }
+
+        .hole-detail {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .detail-label {
+            font-weight: 500;
+        }
+
+        /* Bet form */
+        .bet-form {
+            margin-bottom: 1.5rem;
+        }
+
+        .checkbox-group {
+            margin-top: 0.5rem;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .checkbox {
+            margin-right: 0.5rem;
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+
+        /* Active bets */
+        .active-bets-header {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .bet-item {
+            background-color: #f9fafb; /* gray-50 */
+            border-radius: 0.25rem;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .bet-header {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .bet-type {
+            font-weight: 500;
+        }
+
+        .bet-participants {
+            font-size: 0.875rem;
+            color: #4b5563; /* gray-600 */
+            margin-top: 0.25rem;
+        }
+
+        .bet-results {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+            font-size: 0.875rem;
+        }
+
+        .player-result {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.25rem;
+        }
+
+        /* Bottom Navigation for mobile */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 0.5rem 0;
+            box-shadow: 0 -1px 3px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #4b5563;
+            text-decoration: none;
+            font-size: 0.75rem;
+        }
+
+        .bottom-nav-icon {
+            font-size: 1.25rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .bottom-nav-item.active {
+            color: #16a34a;
+        }
+
+        /* Add bottom padding to account for nav bar */
+        .content-with-bottom-nav {
+            padding-bottom: 4rem;
+        }
+
+        @media (min-width: 768px) {
+            .bottom-nav {
+                display: none;
+            }
+            
+            .content-with-bottom-nav {
+                padding-bottom: 1rem;
+            }
+        }
+
+        /* Install prompt */
+        .install-prompt {
+            position: fixed;
+            bottom: 4rem;
+            left: 1rem;
+            right: 1rem;
+            background-color: white;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: none;
+            z-index: 110;
+        }
+
+        .install-prompt-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .install-prompt-title {
+            font-weight: 600;
+        }
+
+        .install-close {
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            color: #4b5563;
+            cursor: pointer;
+        }
+
+        .install-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .install-btn {
+            flex: 1;
+            padding: 0.5rem;
+            border: none;
+            border-radius: 0.25rem;
+            font-weight: 500;
+        }
+
+        .install-yes {
+            background-color: #16a34a;
+            color: white;
+        }
+
+        .install-no {
+            background-color: #e5e7eb;
+            color: #4b5563;
+        }
+
+        @media (min-width: 768px) {
+            .install-prompt {
+                max-width: 400px;
+                left: auto;
+                right: 1rem;
+                bottom: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container content-with-bottom-nav">
+        <div class="header text-center">
+            <h1>Sandbagger</h1>
+            <p>Track golf bets, handicaps, and scorecards</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('scorecard')">Scorecard</button>
+            <button class="tab" onclick="showTab('players')">Players</button>
+        </div>
+
+        <div id="scorecard-view">
+            <div class="scorecard-container">
+                <h2 class="scorecard-header">Sample Golf Course Scorecard</h2>
+                
+                <div class="scorecard-nav">
+                    <button class="scorecard-nav-btn" onclick="showPrevHoles()">← Front 9</button>
+                    <span class="scorecard-view-label" id="holes-view-label">Back 9</span>
+                    <button class="scorecard-nav-btn" onclick="showNextHoles()">All Holes →</button>
+                </div>
+                
+                <!-- Mobile compact view - Front 9 -->
+                <div class="scorecard scorecard-compact" id="front-9">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Hole</th>
+                                <th class="hole-number">1</th>
+                                <th class="hole-number">2</th>
+                                <th class="hole-number">3</th>
+                                <th class="hole-number">4</th>
+                                <th class="hole-number">5</th>
+                                <th class="hole-number">6</th>
+                                <th class="hole-number">7</th>
+                                <th class="hole-number">8</th>
+                                <th class="hole-number">9</th>
+                                <th>F9</th>
+                            </tr>
+                            <tr>
+                                <th>Par</th>
+                                <td>4</td>
+                                <td>5</td>
+                                <td>3</td>
+                                <td>4</td>
+                                <td>4</td>
+                                <td>5</td>
+                                <td>3</td>
+                                <td>4</td>
+                                <td>4</td>
+                                <td class="total-score">36</td>
+                            </tr>
+                            <tr>
+                                <th>HCP</th>
+                                <td>7</td>
+                                <td>1</td>
+                                <td>15</td>
+                                <td>5</td>
+                                <td>11</td>
+                                <td>3</td>
+                                <td>17</td>
+                                <td>13</td>
+                                <td>9</td>
+                                <td></td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th>P1 (12)</th>
+                                <td style="position: relative;">
+                                    <input type="number" class="score-input" min="0" max="20" value="5">
+                                    <span class="strokes-dot">•</span>
+                                </td>
+                                <td style="position: relative;">
+                                    <input type="number" class="score-input" min="0" max="20" value="6">
+                                    <span class="strokes-dot">•</span>
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="3">
+                                </td>
+                                <td style="position: relative;">
+                                    <input type="number" class="score-input" min="0" max="20" value="5">
+                                    <span class="strokes-dot">•</span>
+                                </td>
+                                <td style="position: relative;">
+                                    <input type="number" class="score-input" min="0" max="20" value="4">
+                                    <span class="strokes-dot">•</span>
+                                </td>
+                                <td style="position: relative;">
+                                    <input type="number" class="score-input" min="0" max="20" value="6">
+                                    <span class="strokes-dot">•</span>
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="4">
+                                </td>
+                                <td style="position: relative;">
+                                    <input type="number" class="score-input" min="0" max="20" value="5">
+                                    <span class="strokes-dot">•</span>
+                                </td>
+                                <td style="position: relative;">
+                                    <input type="number" class="score-input" min="0" max="20" value="5">
+                                    <span class="strokes-dot">•</span>
+                                </td>
+                                <td class="total-score">43</td>
+                            </tr>
+                            <tr>
+                                <th>P2 (8)</th>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="4">
+                                </td>
+                                <td style="position: relative;">
+                                    <input type="number" class="score-input" min="0" max="20" value="6">
+                                    <span class="strokes-dot">•</span>
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="3">
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="4">
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="4">
+                                </td>
+                                <td style="position: relative;">
+                                    <input type="number" class="score-input" min="0" max="20" value="5">
+                                    <span class="strokes-dot">•</span>
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="3">
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="4">
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="4">
+                                </td>
+                                <td class="total-score">37</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Mobile compact view - Back 9 -->
+                <div class="scorecard scorecard-compact" id="back-9" style="display: none;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Hole</th>
+                                <th class="hole-number">10</th>
+                                <th class="hole-number">11</th>
+                                <th class="hole-number">12</th>
+                                <th class="hole-number">13</th>
+                                <th class="hole-number">14</th>
+                                <th class="hole-number">15</th>
+                                <th class="hole-number">16</th>
+                                <th class="hole-number">17</th>
+                                <th class="hole-number">18</th>
+                                <th>B9</th>
+                            </tr>
+                            <tr>
+                                <th>Par</th>
+                                <td>4</td>
+                                <td>5</td>
+                                <td>3</td>
+                                <td>4</td>
+                                <td>4</td>
+                                <td>5</td>
+                                <td>3</td>
+                                <td>4</td>
+                                <td>4</td>
+                                <td class="total-score">36</td>
+                            </tr>
+                            <tr>
+                                <th>HCP</th>
+                                <td>8</td>
+                                <td>2</td>
+                                <td>16</td>
+                                <td>6</td>
+                                <td>12</td>
+                                <td>4</td>
+                                <td>18</td>
+                                <td>14</td>
+                                <td>10</td>
+                                <td></td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th>P1 (12)</th>
+                                <td style="position: relative;">
+                                    <input type="number" class="score-input" min="0" max="20" value="5">
+                                    <span class="strokes-dot">•</span>
+                                </td>
+                                <td style="position: relative;">
+                                    <input type="number" class="score-input" min="0" max="20" value="6">
+                                    <span class="strokes-dot">•</span>
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="3">
+                                </td>
+                                <td style="position: relative;">
+                                    <input type="number" class="score-input" min="0" max="20" value="5">
+                                    <span class="strokes-dot">•</span>
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="4">
+                                </td>
+                                <td style="position: relative;">
+                                    <input type="number" class="score-input" min="0" max="20" value="6">
+                                    <span class="strokes-dot">•</span>
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="3">
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="4">
+                                </td>
+                                <td style="position: relative;">
+                                    <input type="number" class="score-input" min="0" max="20" value="5">
+                                    <span class="strokes-dot">•</span>
+                                </td>
+                                <td class="total-score">41</td>
+                            </tr>
+                            <tr>
+                                <th>P2 (8)</th>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="4">
+                                </td>
+                                <td style="position: relative;">
+                                    <input type="number" class="score-input" min="0" max="20" value="5">
+                                    <span class="strokes-dot">•</span>
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="3">
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="4">
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="4">
+                                </td>
+                                <td style="position: relative;">
+                                    <input type="number" class="score-input" min="0" max="20" value="5">
+                                    <span class="strokes-dot">•</span>
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="3">
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="4">
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="4">
+                                </td>
+                                <td class="total-score">36</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Mobile view - Summary -->
+                <div class="scorecard scorecard-compact" id="total-view" style="display: none;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Player</th>
+                                <th>F9</th>
+                                <th>B9</th>
+                                <th>Total</th>
+                                <th>Net</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th>Player 1</th>
+                                <td>43</td>
+                                <td>41</td>
+                                <td class="total-score">84</td>
+                                <td class="total-score">72</td>
+                            </tr>
+                            <tr>
+                                <th>Player 2</th>
+                                <td>37</td>
+                                <td>36</td>
+                                <td class="total-score">73</td>
+                                <td class="total-score">65</td>
+                            </tr>
+                            <tr>
+                                <th>Par</th>
+                                <td>36</td>
+                                <td>36</td>
+                                <td class="total-score">72</td>
+                                <td>-</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Full desktop view -->
+                <div class="scorecard scorecard-full">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Hole</th>
+                                <th class="hole-number">1</th>
+                                <th class="hole-number">2</th>
+                                <th class="hole-number">3</th>
+                                <th class="hole-number">4</th>
+                                <th class="hole-number">5</th>
+                                <th class="hole-number">6</th>
+                                <th class="hole-number">7</th>
+                                <th class="hole-number">8</th>
+                                <th class="hole-number">9</th>
+                                <th class="hole-number">10</th>
+                                <th class="hole-number">11</th>
+                                <th class="hole-number">12</th>
+                                <th class="hole-number">13</th>
+                                <th class="hole-number">14</th>
+                                <th class="hole-number">15</th>
+                                <th class="hole-number">16</th>
+                                <th class="hole-number">17</th>
+                                <th class="hole-number">18</th>
+                                <th>Total</th>
+                            </tr>
+                            <tr>
+                                <th>Par</th>
+                                <td>4</td>
+                                <td>5</td>
+                                <td>3</td>
+                                <td>4</td>
+                                <td>4</td>
+                                <td>5</td>
+                                <td>3</td>
+                                <td>4</td>
+                                <td>4</td>
+                                <td>4</td>
+                                <td>5</td>
+                                <td>3</td>
+                                <td>4</td>
+                                <td>4</td>
+                                <td>5</td>
+                                <td>3</td>
+                                <td>4</td>
+                                <td>4</td>
+                                <td class="total-score">72</td>
+                            </tr>
+                            <tr>
+                                <th>Handicap</th>
+                                <td>7</td>
+                                <td>1</td>
+                                <td>15</td>
+                                <td>5</td>
+                                <td>11</td>
+                                <td>3</td>
+                                <td>17</td>
+                                <td>13</td>
+                                <td>9</td>
+                                <td>8</td>
+                                <td>2</td>
+                                <td>16</td>
+                                <td>6</td>
+                                <td>12</td>
+                                <td>4</td>
+                                <td>18</td>
+                                <td>14</td>
+                                <td>10</td>
+                                <td></td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th>Player 1 (HCP: 12)</th>
+                                <td style="position: relative;">
+                                    <input type="number" class="score-input" min="0" max="20" value="5">
+                                    <span class="strokes-dot">•</span>
+                                </td>
+                                <td style="position: relative;">
+                                    <input type="number" class="score-input" min="0" max="20" value="6">
+                                    <span class="strokes-dot">•</span>
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="3">
+                                </td>
+                                <td style="position: relative;">
+                                    <input type="number" class="score-input" min="0" max="20" value="5">
+                                    <span class="strokes-dot">•</span>
+                                </td>
+                                <td style="position: relative;">
+                                    <input type="number" class="score-input" min="0" max="20" value="4">
+                                    <span class="strokes-dot">•</span>
+                                </td>
+                                <td style="position: relative;">
+                                    <input type="number" class="score-input" min="0" max="20" value="6">
+                                    <span class="strokes-dot">•</span>
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="4">
+                                </td>
+                                <td style="position: relative;">
+                                    <input type="number" class="score-input" min="0" max="20" value="5">
+                                    <span class="strokes-dot">•</span>
+                                </td>
+                                <td style="position: relative;">
+                                    <input type="number" class="score-input" min="0" max="20" value="5">
+                                    <span class="strokes-dot">•</span>
+                                </td>
+                                <td style="position: relative;">
+                                    <input type="number" class="score-input" min="0" max="20" value="5">
+                                    <span class="strokes-dot">•</span>
+                                </td>
+                                <td style="position: relative;">
+                                    <input type="number" class="score-input" min="0" max="20" value="6">
+                                    <span class="strokes-dot">•</span>
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="3">
+                                </td>
+                                <td style="position: relative;">
+                                    <input type="number" class="score-input" min="0" max="20" value="5">
+                                    <span class="strokes-dot">•</span>
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="4">
+                                </td>
+                                <td style="position: relative;">
+                                    <input type="number" class="score-input" min="0" max="20" value="6">
+                                    <span class="strokes-dot">•</span>
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="3">
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="4">
+                                </td>
+                                <td style="position: relative;">
+                                    <input type="number" class="score-input" min="0" max="20" value="5">
+                                    <span class="strokes-dot">•</span>
+                                </td>
+                                <td class="total-score">84 (72)</td>
+                            </tr>
+                            <tr>
+                                <th>Player 2 (HCP: 8)</th>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="4">
+                                </td>
+                                <td style="position: relative;">
+                                    <input type="number" class="score-input" min="0" max="20" value="6">
+                                    <span class="strokes-dot">•</span>
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="3">
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="4">
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="4">
+                                </td>
+                                <td style="position: relative;">
+                                    <input type="number" class="score-input" min="0" max="20" value="5">
+                                    <span class="strokes-dot">•</span>
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="3">
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="4">
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="4">
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="4">
+                                </td>
+                                <td style="position: relative;">
+                                    <input type="number" class="score-input" min="0" max="20" value="5">
+                                    <span class="strokes-dot">•</span>
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="3">
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="4">
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="4">
+                                </td>
+                                <td style="position: relative;">
+                                    <input type="number" class="score-input" min="0" max="20" value="5">
+                                    <span class="strokes-dot">•</span>
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="3">
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="4">
+                                </td>
+                                <td>
+                                    <input type="number" class="score-input" min="0" max="20" value="4">
+                                </td>
+                                <td class="total-score">73 (65)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="info-section">
+                    <div class="info-card">
+                        <h3 class="info-card-header">Hole Information</h3>
+                        
+                        <div class="hole-selector">
+                            <button class="hole-button active">1</button>
+                            <button class="hole-button">2</button>
+                            <button class="hole-button">3</button>
+                            <button class="hole-button">4</button>
+                            <button class="hole-button">5</button>
+                            <button class="hole-button">6</button>
+                            <button class="hole-button">7</button>
+                            <button class="hole-button">8</button>
+                            <button class="hole-button">9</button>
+                            <button class="hole-button">10</button>
+                            <button class="hole-button">11</button>
+                            <button class="hole-button">12</button>
+                            <button class="hole-button">13</button>
+                            <button class="hole-button">14</button>
+                            <button class="hole-button">15</button>
+                            <button class="hole-button">16</button>
+                            <button class="hole-button">17</button>
+                            <button class="hole-button">18</button>
+                        </div>
+                        
+                        <div class="hole-detail">
+                            <span class="detail-label">Hole:</span>
+                            <span>1</span>
+                        </div>
+                        <div class="hole-detail">
+                            <span class="detail-label">Par:</span>
+                            <span>4</span>
+                        </div>
+                        <div class="hole-detail">
+                            <span class="detail-label">Handicap:</span>
+                            <span>7</span>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <h3 class="info-card-header">Bet Tracker</h3>
+                        
+                        <form class="bet-form">
+                            <div class="form-group">
+                                <label>Bet Type</label>
+                                <select>
+                                    <option value="match">Match Play</option>
+                                    <option value="nassau">Nassau</option>
+                                    <option value="skins">Skins</option>
+                                    <option value="bingo-bango-bongo">Bingo-Bango-Bongo</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Amount ($)</label>
+                                <input type="number" value="5" min="1">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Participants</label>
+                                <div class="checkbox-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" class="checkbox" checked> Player 1
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" class="checkbox" checked> Player 2
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <button type="button" class="btn">Add Bet</button>
+                        </form>
+                        
+                        <h4 class="active-bets-header">Active Bets</h4>
+                        <div class="bet-item">
+                            <div class="bet-header">
+                                <span class="bet-type">Match Play</span>
+                                <span>$5</span>
+                            </div>
+                            <div class="bet-participants">
+                                Player 1, Player 2
+                            </div>
+                            <div class="bet-results">
+                                <div class="player-result">
+                                    <span>Player 1</span>
+                                    <span>Net: 72</span>
+                                </div>
+                                <div class="player-result">
+                                    <span>Player 2</span>
+                                    <span>Net: 65</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="players-view" style="display: none;">
+            <div class="player-management">
+                <h3 class="info-card-header">Player Management</h3>
+                
+                <form class="player-form">
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" placeholder="Enter player name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Handicap</label>
+                        <input type="number" value="0" min="0" max="36">
+                    </div>
+                    
+                    <button type="button" class="btn">Add Player</button>
+                </form>
+                
+                <h4 class="active-bets-header">Players</h4>
+                <div class="player-list">
+                    <div class="player-item">
+                        <div>
+                            <span class="player-name">Player 1</span>
+                            <span class="player-handicap">HCP: 12</span>
+                        </div>
+                        <div class="player-actions">
+                            <button class="btn-sm btn-edit">Edit</button>
+                            <button class="btn-sm btn-delete">Delete</button>
+                        </div>
+                    </div>
+                    <div class="player-item">
+                        <div>
+                            <span class="player-name">Player 2</span>
+                            <span class="player-handicap">HCP: 8</span>
+                        </div>
+                        <div class="player-actions">
+                            <button class="btn-sm btn-edit">Edit</button>
+                            <button class="btn-sm btn-delete">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bottom navigation for mobile -->
+    <div class="bottom-nav">
+        <a href="#" class="bottom-nav-item active" onclick="showTab('scorecard')">
+            <span class="bottom-nav-icon">📊</span>
+            <span>Scorecard</span>
+        </a>
+        <a href="#" class="bottom-nav-item" onclick="showView('hole-info')">
+            <span class="bottom-nav-icon">⛳</span>
+            <span>Hole Info</span>
+        </a>
+        <a href="#" class="bottom-nav-item" onclick="showView('bets')">
+            <span class="bottom-nav-icon">💰</span>
+            <span>Bets</span>
+        </a>
+        <a href="#" class="bottom-nav-item" onclick="showTab('players')">
+            <span class="bottom-nav-icon">👥</span>
+            <span>Players</span>
+        </a>
+    </div>
+    
+    <!-- Install prompt -->
+    <div class="install-prompt" id="install-prompt">
+        <div class="install-prompt-header">
+            <span class="install-prompt-title">Add to Home Screen</span>
+            <button class="install-close" onclick="closeInstallPrompt()">×</button>
+        </div>
+        <p>Install Sandbagger as an app on your device for easy access while golfing.</p>
+        <div class="install-buttons">
+            <button class="install-btn install-yes" id="install-yes">Install</button>
+            <button class="install-btn install-no" onclick="closeInstallPrompt()">Not Now</button>
+        </div>
+    </div>
+
+    <script>
+        let deferredPrompt;
+        let currentView = 'front-9';
+        let viewSequence = ['front-9', 'back-9', 'total-view'];
+        let viewIndex = 0;
+        
+        // Tab navigation
+        function showTab(tabName) {
+            // Hide all views
+            document.getElementById('scorecard-view').style.display = 'none';
+            document.getElementById('players-view').style.display = 'none';
+            
+            // Show selected view
+            document.getElementById(tabName + '-view').style.display = 'block';
+            
+            // Update tab classes
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Find the clicked tab and add active class
+            const activeTab = Array.from(tabs).find(tab => 
+                tab.textContent.toLowerCase() === tabName
+            );
+            if (activeTab) {
+                activeTab.classList.add('active');
+            }
+            
+            // Update bottom nav
+            const bottomNavItems = document.querySelectorAll('.bottom-nav-item');
+            bottomNavItems.forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Find the clicked nav item and add active class
+            const activeNavItem = Array.from(bottomNavItems).find(item => 
+                item.textContent.trim().toLowerCase() === tabName
+            );
+            if (activeNavItem) {
+                activeNavItem.classList.add('active');
+            }
+        }
+        
+        // Mobile scorecard navigation
+        function showNextHoles() {
+            document.getElementById(currentView).style.display = 'none';
+            viewIndex = (viewIndex + 1) % viewSequence.length;
+            currentView = viewSequence[viewIndex];
+            document.getElementById(currentView).style.display = 'block';
+            updateViewLabel();
+        }
+        
+        function showPrevHoles() {
+            document.getElementById(currentView).style.display = 'none';
+            viewIndex = (viewIndex - 1 + viewSequence.length) % viewSequence.length;
+            currentView = viewSequence[viewIndex];
+            document.getElementById(currentView).style.display = 'block';
+            updateViewLabel();
+        }
+        
+        function updateViewLabel() {
+            const label = document.getElementById('holes-view-label');
+            if (currentView === 'front-9') {
+                label.textContent = 'Front 9';
+            } else if (currentView === 'back-9') {
+                label.textContent = 'Back 9';
+            } else {
+                label.textContent = 'Summary';
+            }
+        }
+        
+        // Handle hole selection
+        const holeButtons = document.querySelectorAll('.hole-button');
+        holeButtons.forEach((button, index) => {
+            button.addEventListener('click', () => {
+                // Remove active class from all buttons
+                holeButtons.forEach(btn => btn.classList.remove('active'));
+                
+                // Add active class to clicked button
+                button.classList.add('active');
+                
+                // Update hole info
+                document.querySelector('.hole-detail:nth-child(1) span:last-child').textContent = index + 1;
+                
+                // Update hole details based on the selected hole
+                const pars = [4, 5, 3, 4, 4, 5, 3, 4, 4, 4, 5, 3, 4, 4, 5, 3, 4, 4];
+                const handicaps = [7, 1, 15, 5, 11, 3, 17, 13, 9, 8, 2, 16, 6, 12, 4, 18, 14, 10];
+                
+                document.querySelector('.hole-detail:nth-child(2) span:last-child').textContent = pars[index];
+                document.querySelector('.hole-detail:nth-child(3) span:last-child').textContent = handicaps[index];
+            });
+        });
+        
+        // Mobile bottom nav view switching
+        function showView(viewType) {
+            if (viewType === 'hole-info') {
+                // Scroll to hole info section
+                document.querySelector('.info-section .info-card:first-child').scrollIntoView({
+                    behavior: 'smooth'
+                });
+            } else if (viewType === 'bets') {
+                // Scroll to bet tracker section
+                document.querySelector('.info-section .info-card:last-child').scrollIntoView({
+                    behavior: 'smooth'
+                });
+            }
+            
+            // Update bottom nav
+            const bottomNavItems = document.querySelectorAll('.bottom-nav-item');
+            bottomNavItems.forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Find the clicked nav item and add active class
+            const activeNavItem = Array.from(bottomNavItems).find(item => 
+                item.textContent.trim().toLowerCase().includes(viewType.split('-')[0])
+            );
+            if (activeNavItem) {
+                activeNavItem.classList.add('active');
+            }
+        }
+        
+        // PWA installation
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent the mini-infobar from appearing on mobile
+            e.preventDefault();
+            // Store the event so it can be triggered later
+            deferredPrompt = e;
+            // Show the install prompt after a delay
+            setTimeout(() => {
+                document.getElementById('install-prompt').style.display = 'block';
+            }, 3000);
+        });
+
+        document.getElementById('install-yes').addEventListener('click', async () => {
+            if (deferredPrompt) {
+                // Show the install prompt
+                deferredPrompt.prompt();
+                // Wait for the user to respond to the prompt
+                const { outcome } = await deferredPrompt.userChoice;
+                // We no longer need the prompt. Clear it
+                deferredPrompt = null;
+                // Hide the install prompt
+                document.getElementById('install-prompt').style.display = 'none';
+            }
+        });
+
+        function closeInstallPrompt() {
+            document.getElementById('install-prompt').style.display = 'none';
+        }
+        
+        // Service worker registration for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Service worker registered'))
+                    .catch(err => console.log('Service worker registration failed', err));
+            });
+        }
+        
+        // Add touch gestures for mobile scorecard navigation
+        const scorecard = document.querySelector('.scorecard-container');
+        let touchStartX = 0;
+        let touchEndX = 0;
+        
+        scorecard.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+        
+        scorecard.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+        
+        function handleSwipe() {
+            const swipeThreshold = 50;
+            if (touchEndX < touchStartX - swipeThreshold) {
+                // Swipe left
+                showNextHoles();
+            }
+            if (touchEndX > touchStartX + swipeThreshold) {
+                // Swipe right
+                showPrevHoles();
+            }
+        }
+        
+        // Local storage for scorecard data
+        function saveScorecard() {
+            // Implementation for saving scorecard data to local storage
+            // This would be implemented in a real app
+        }
+        
+        // Prevent zooming on double tap
+        document.addEventListener('dblclick', function(e) {
+            e.preventDefault();
+        }, { passive: false });
+    </script>
+</body>
+</html>
