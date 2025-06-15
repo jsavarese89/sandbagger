@@ -2,37 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#16a34a" />
-  <meta name="description" content="Track golf scores, bets, and handicaps with this golf scorecard app." />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  
-  <link rel="icon" type="image/png" sizes="32x32" href="/public/icons/icon-192x192.png" />
-  <link rel="apple-touch-icon" href="/public/icons/icon-192x192.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.1/dist/tailwind.min.css" rel="stylesheet">
   <link rel="manifest" href="/manifest.json" />
-  <link rel="stylesheet" href="/src/index.css">
-  
   <title>Sandbagger</title>
 </head>
 <body class="bg-gray-50 text-gray-900">
   <div id="root" class="p-4 max-w-screen-md mx-auto"></div>
   <script type="module" src="/src/main.jsx"></script>
-  
-  <script>
-    // Register service worker for PWA functionality
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-          .then(registration => {
-            console.log('Service Worker registered with scope:', registration.scope);
-          })
-          .catch(error => {
-            console.error('Service Worker registration failed:', error);
-          });
-      });
-    }
-  </script>
 </body>
 </html>

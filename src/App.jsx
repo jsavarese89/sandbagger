@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react'
+import { AuthProvider } from './contexts/AuthContext'
 import PlayerManagement from './components/PlayerManagement'
 import Scorecard from './components/Scorecard'
-import { signInAnonymous, createRound, getRound } from './firebase'
+import Dashboard from './components/Dashboard'
+import { createRound, getRound } from './firebase'
+import { useAuth } from './contexts/AuthContext'
 
-function App() {
+function MainApp() {
+  const { currentUser, userProfile } = useAuth();
   const [players, setPlayers] = useState([])
-  const [userId, setUserId] = useState(null)
   const [roundId, setRoundId] = useState(null)
   const [loading, setLoading] = useState(false)
   const [isConnected, setIsConnected] = useState(navigator.onLine)
-  const [view, setView] = useState('setup') // 'setup' or 'round'
+  const [view, setView] = useState('setup') // 'setup', 'round', or 'dashboard'
   
   // Check network status
   useEffect(() => {
@@ -25,29 +28,32 @@ function App() {
     }
   }, [])
   
-  // Sign in anonymously on load
+  // Check for roundId in URL
   useEffect(() => {
-    async function signIn() {
-      try {
-        const user = await signInAnonymous()
-        setUserId(user.uid)
-      } catch (error) {
-        console.error("Error signing in:", error)
-      }
-    }
-    
-    signIn()
-    
-    // Check for roundId in URL
     const url = new URL(window.location)
     const pathSegments = url.pathname.split('/')
-    if (pathSegments.includes('round') && pathSegments.length > 2) {
+    
+    if (pathSegments.includes('dashboard')) {
+      setView('dashboard')
+    } else if (pathSegments.includes('round') && pathSegments.length > 2) {
       const urlRoundId = pathSegments[pathSegments.indexOf('round') + 1]
       if (urlRoundId) {
         loadExistingRound(urlRoundId)
       }
     }
   }, [])
+  
+  // Initialize players from user profile if available
+  useEffect(() => {
+    if (view === 'setup' && currentUser && userProfile) {
+      setPlayers([
+        {
+          name: userProfile.displayName || currentUser.email,
+          handicap: userProfile.handicap || 0
+        }
+      ])
+    }
+  }, [currentUser, userProfile, view])
   
   const loadExistingRound = async (id) => {
     try {
@@ -83,7 +89,12 @@ function App() {
         players,
         scores,
         bets: [],
-        createdBy: userId,
+        createdBy: currentUser ? currentUser.uid : null,
+        course: {
+          name: 'Sample Golf Course',
+          par: [4, 5, 3, 4, 4, 5, 3, 4, 4, 4, 5, 3, 4, 4, 5, 3, 4, 4],
+          handicap: [7, 1, 15, 5, 11, 3, 17, 13, 9, 8, 2, 16, 6, 12, 4, 18, 14, 10]
+        }
       })
       
       setRoundId(id)
@@ -103,11 +114,31 @@ function App() {
     window.history.pushState({}, '', '/')
   }
   
+  const navigateToDashboard = () => {
+    setView('dashboard')
+    window.history.pushState({}, '', '/dashboard')
+  }
+  
   return (
     <div className="max-w-screen-lg mx-auto p-4 space-y-6">
       <header className="text-center space-y-2 mb-6">
         <h1 className="text-3xl font-bold text-green-700">Sandbagger</h1>
         <p className="text-gray-700">Track golf bets, handicaps, and scorecards</p>
+        
+        <nav className="flex justify-center space-x-4 mt-4">
+          <button 
+            onClick={returnToSetup}
+            className={`px-3 py-1 rounded ${view === 'setup' ? 'bg-green-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
+          >
+            New Round
+          </button>
+          <button 
+            onClick={navigateToDashboard}
+            className={`px-3 py-1 rounded ${view === 'dashboard' ? 'bg-green-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
+          >
+            Dashboard
+          </button>
+        </nav>
       </header>
       
       {loading && (
@@ -116,7 +147,9 @@ function App() {
         </div>
       )}
       
-      {view === 'setup' ? (
+      {view === 'dashboard' ? (
+        <Dashboard />
+      ) : view === 'setup' ? (
         <div className="space-y-6">
           <PlayerManagement 
             players={players}
@@ -154,6 +187,14 @@ function App() {
         </div>
       )}
     </div>
+  )
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <MainApp />
+    </AuthProvider>
   )
 }
 
