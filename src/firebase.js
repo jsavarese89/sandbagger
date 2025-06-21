@@ -337,15 +337,9 @@ export const signOut = async () => {
     console.log('Signing out user');
     await firebaseSignOut(auth);
     console.log('User signed out successfully');
-
-    // Force a page refresh to ensure clean state
-    window.location.href = '/reset.html';
+    // Don't auto-redirect - let the app handle navigation
   } catch (error) {
     console.error('Error signing out: ', error);
-    // Still try to refresh even if Firebase signOut fails
-    setTimeout(() => {
-      window.location.href = '/reset.html';
-    }, 500);
     throw error;
   }
 };

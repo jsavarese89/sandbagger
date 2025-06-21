@@ -5,71 +5,6 @@ import { useAuth } from '../contexts/AuthContext';
 import Login from './auth/Login';
 import Signup from './auth/Signup';
 
-const DebugButtons = () => {
-  // Force refresh function
-  const forceRefreshApp = () => {
-    // Clear service worker caches
-    if ('caches' in window) {
-      caches.keys().then(cacheNames => {
-        cacheNames.forEach(cacheName => {
-          console.log('Deleting cache:', cacheName);
-          caches.delete(cacheName);
-        });
-      });
-    }
-
-    // Force reload the page without cache
-    window.location.reload(true);
-  };
-
-  // Reset app function
-  const resetApp = () => {
-    window.location.href = '/reset.html';
-  };
-
-  return (
-    <div style={{
-      position: 'fixed',
-      top: '10px',
-      right: '10px',
-      zIndex: 9999,
-      display: 'flex',
-      gap: '10px',
-    }}
-    >
-      <button
-        onClick={forceRefreshApp}
-        style={{
-          padding: '8px 16px',
-          backgroundColor: '#15803d',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer',
-          fontWeight: 'bold',
-          fontSize: '14px',
-        }}
-      >
-        Force Refresh
-      </button>
-      <button
-        onClick={resetApp}
-        style={{
-          padding: '8px 16px',
-          backgroundColor: '#6366f1',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer',
-          fontWeight: 'bold',
-          fontSize: '14px',
-        }}
-      >
-        Reset App
-      </button>
-    </div>
-  );
-};
 
 const LandingPage = ({ onAuthenticated }) => {
   const [isLogin, setIsLogin] = useState(true);
@@ -135,9 +70,6 @@ const LandingPage = ({ onAuthenticated }) => {
 
   return (
     <div className="landing-page">
-      {/* Always show debug buttons */}
-      <DebugButtons />
-
       <div className="header text-center">
         <div className="app-logo">
           <img src="/icons/icon-192x192.png" alt="Sandbagger Logo" className="logo-image" />

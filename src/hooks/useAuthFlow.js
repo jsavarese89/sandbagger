@@ -15,7 +15,7 @@ export const useAuthFlow = () => {
     try {
       setView('login');
       window.history.pushState({}, '', '/');
-      localStorage.removeItem('currentRoundId');
+      // Don't clear currentRoundId - preserve rounds across sessions
 
       await logout();
 
