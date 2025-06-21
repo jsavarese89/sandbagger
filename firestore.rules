@@ -1,0 +1,41 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // User profiles
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth.uid == userId;
+      allow update: if request.auth.uid == userId;
+      
+      // Allow a user to read other user profiles if they are friends
+      allow read: if request.auth != null && 
+                 exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+                 get(/databases/$(database)/documents/users/$(request.auth.uid)).data.friends.hasAny([userId]);
+    }
+    
+    // Golf rounds
+    match /rounds/{roundId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      
+      // Only allow updates by the creator or shared players
+      allow update: if request.auth != null && 
+                   (resource.data.createdBy == request.auth.uid || 
+                    resource.data.players.hasAny([request.auth.uid]));
+                   
+      // Allow reading rounds if you're a player or friend of the creator
+      allow read: if request.auth != null && 
+                 (resource.data.players.hasAny([request.auth.uid]) ||
+                 (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+                  exists(/databases/$(database)/documents/users/$(resource.data.createdBy)) &&
+                  get(/databases/$(database)/documents/users/$(request.auth.uid)).data.friends.hasAny([resource.data.createdBy])));
+    }
+
+    // Golf courses - allow all authenticated users to read and create
+    match /courses/{courseId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null; // Consider restricting this in production
+    }
+  }
+}

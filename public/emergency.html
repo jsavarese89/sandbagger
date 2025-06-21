@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sandbagger Emergency Reset</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      text-align: center;
+      padding: 40px 20px;
+      color: #333;
+      background-color: #f5f5f5;
+    }
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      background-color: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #15803d;
+      margin-bottom: 20px;
+    }
+    .description {
+      margin-bottom: 30px;
+      line-height: 1.5;
+    }
+    .button-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      max-width: 300px;
+      margin: 0 auto;
+    }
+    .button {
+      display: block;
+      padding: 15px 20px;
+      border-radius: 6px;
+      border: none;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      text-align: center;
+      color: white;
+      text-decoration: none;
+    }
+    .button:hover {
+      opacity: 0.9;
+    }
+    .refresh-button {
+      background-color: #15803d;
+    }
+    .reset-button {
+      background-color: #6366f1;
+    }
+    .nuke-button {
+      background-color: #ef4444;
+    }
+    .home-button {
+      background-color: #333;
+      margin-top: 20px;
+    }
+    .status {
+      margin-top: 20px;
+      padding: 10px;
+      border-radius: 4px;
+      display: none;
+    }
+    .success {
+      background-color: #dcfce7;
+      color: #15803d;
+    }
+    .error {
+      background-color: #fee2e2;
+      color: #ef4444;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Sandbagger Emergency Reset</h1>
+    <p class="description">
+      If you're experiencing issues with the app, such as blank screens after login or other unexpected behavior, 
+      use these options to resolve them:
+    </p>
+    
+    <div class="button-container">
+      <button class="button refresh-button" id="refreshButton">
+        Force Refresh (Try First)
+      </button>
+      
+      <button class="button reset-button" id="resetButton">
+        Reset App Cache
+      </button>
+      
+      <button class="button nuke-button" id="nukeButton">
+        Nuclear Option (Clear Everything)
+      </button>
+      
+      <a href="/" class="button home-button">
+        Return to App
+      </a>
+    </div>
+    
+    <div class="status" id="statusMessage"></div>
+  </div>
+
+  <script>
+    // Show status message
+    function showStatus(message, isSuccess = true) {
+      const statusEl = document.getElementById('statusMessage');
+      statusEl.textContent = message;
+      statusEl.style.display = 'block';
+      
+      if (isSuccess) {
+        statusEl.classList.add('success');
+        statusEl.classList.remove('error');
+      } else {
+        statusEl.classList.add('error');
+        statusEl.classList.remove('success');
+      }
+    }
+    
+    // Force refresh - Clear caches and reload
+    document.getElementById('refreshButton').addEventListener('click', async () => {
+      try {
+        showStatus('Clearing caches...');
+        
+        // Clear service worker caches
+        if ('caches' in window) {
+          const cacheNames = await caches.keys();
+          await Promise.all(
+            cacheNames.map(cacheName => {
+              console.log(`Deleting cache: ${cacheName}`);
+              return caches.delete(cacheName);
+            })
+          );
+        }
+        
+        showStatus('Caches cleared! Reloading page...');
+        
+        // Brief delay before reloading
+        setTimeout(() => {
+          window.location.href = '/?fresh=1';
+        }, 1500);
+        
+      } catch (error) {
+        console.error('Error clearing caches:', error);
+        showStatus('Error clearing caches: ' + error.message, false);
+      }
+    });
+    
+    // Reset App - Go to reset.html
+    document.getElementById('resetButton').addEventListener('click', () => {
+      window.location.href = '/reset.html';
+    });
+    
+    // Nuclear option - Clear everything
+    document.getElementById('nukeButton').addEventListener('click', async () => {
+      try {
+        showStatus('Performing complete data reset...');
+        
+        // Clear all localStorage
+        localStorage.clear();
+        console.log('LocalStorage cleared');
+        
+        // Clear session storage
+        sessionStorage.clear();
+        console.log('SessionStorage cleared');
+        
+        // Clear all caches
+        if ('caches' in window) {
+          const cacheNames = await caches.keys();
+          await Promise.all(
+            cacheNames.map(cacheName => {
+              console.log(`Deleting cache: ${cacheName}`);
+              return caches.delete(cacheName);
+            })
+          );
+        }
+        
+        // Clear IndexedDB databases
+        if (window.indexedDB && window.indexedDB.databases) {
+          try {
+            const databases = await window.indexedDB.databases();
+            await Promise.all(
+              databases.map(db => {
+                return new Promise((resolve, reject) => {
+                  const request = window.indexedDB.deleteDatabase(db.name);
+                  request.onsuccess = () => {
+                    console.log(`Deleted database: ${db.name}`);
+                    resolve();
+                  };
+                  request.onerror = () => {
+                    console.error(`Error deleting database: ${db.name}`);
+                    reject();
+                  };
+                });
+              })
+            );
+          } catch (error) {
+            console.error('Error clearing IndexedDB databases:', error);
+          }
+        }
+        
+        // Clear cookies
+        document.cookie.split(";").forEach(cookie => {
+          const eqPos = cookie.indexOf("=");
+          const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+          document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+        });
+        
+        showStatus('All data cleared! Redirecting to home page...');
+        
+        // Brief delay before redirecting
+        setTimeout(() => {
+          window.location.href = '/?fresh=1';
+        }, 2000);
+        
+      } catch (error) {
+        console.error('Error during nuclear reset:', error);
+        showStatus('Error during reset: ' + error.message, false);
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,166 @@
+<\!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sandbagger Debug Mode</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #f5f5f5;
+      line-height: 1.6;
+      color: #333;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    h1 {
+      color: #15803d;
+    }
+    .card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    h2 {
+      color: #0f766e;
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 10px;
+      margin-top: 0;
+    }
+    pre {
+      background: #f1f5f9;
+      padding: 15px;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 14px;
+    }
+    code {
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    }
+    .highlight {
+      background-color: #fef9c3;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+    .warning {
+      background-color: #fee2e2;
+      border-left: 4px solid #ef4444;
+      padding: 10px 15px;
+      margin: 20px 0;
+    }
+    .step {
+      margin-bottom: 30px;
+    }
+    .btn {
+      display: inline-block;
+      background-color: #15803d;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-weight: 500;
+      margin-right: 10px;
+    }
+    .btn-secondary {
+      background-color: #6366f1;
+    }
+    .btn-sm {
+      padding: 5px 10px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Sandbagger Debugging Mode</h1>
+    <p>This page will help diagnose and fix React hooks errors in your application.</p>
+  </header>
+
+  <div class="card">
+    <h2>Current Issue: React Error #310</h2>
+    <p>This error occurs when the <strong>Rules of Hooks</strong> are violated in your React components. Specifically, it's happening when:</p>
+    <blockquote>
+      Hooks cannot be called conditionally or after early returns. Hooks must be called in the exact same order on every render.
+    </blockquote>
+    
+    <div class="warning">
+      <strong>Common causes:</strong>
+      <ul>
+        <li>Calling hooks inside conditional statements (if/else blocks)</li>
+        <li>Calling hooks inside loops</li>
+        <li>Using hooks after an early return statement</li>
+        <li>Missing hook imports (like useCallback)</li>
+        <li>Inconsistent hook ordering between renders</li>
+      </ul>
+    </div>
+  </div>
+  
+  <div class="card">
+    <h2>Debugging Steps</h2>
+    
+    <div class="step">
+      <h3>1. Use the development build with unminified errors</h3>
+      <p>We've created a non-minified development build that will show full error messages.</p>
+      <a href="/dev-build/" class="btn">Launch Development Build</a>
+    </div>
+    
+    <div class="step">
+      <h3>2. Examine PlayerManagement component</h3>
+      <p>Based on our analysis, the PlayerManagement component might have issues with its useState and useCallback hooks:</p>
+      <pre><code>// In PlayerManagement.jsx
+const [state, setState] = useState({
+  name: '',
+  handicap: 0,
+  editIndex: null,
+  selectedCourse: null,
+  formKey: 0
+});
+
+// Check that all functions using state values are properly
+// handling state updates and dependencies</code></pre>
+    </div>
+    
+    <div class="step">
+      <h3>3. Debug main App component</h3>
+      <p>Check how useState is used in the App.jsx file:</p>
+      <pre><code>// In App.jsx
+const [appState, setAppState] = useState({
+  players: [],
+  roundId: null,
+  loading: false,
+  isConnected: navigator.onLine,
+  view: 'login',
+  selectedCourse: null,
+  authCheckFailed: false
+});
+
+// Ensure that useCallback is properly imported and used</code></pre>
+    </div>
+  </div>
+  
+  <div class="card">
+    <h2>Immediate Fixes</h2>
+    <p>While we work on a permanent solution, you can:</p>
+    <ol>
+      <li>Reset the application state: <a href="/reset.html" class="btn btn-sm">Reset App</a></li>
+      <li>Try the app in basic mode: <a href="/basic.html" class="btn btn-sm btn-secondary">Basic Mode</a></li>
+    </ol>
+  </div>
+
+  <div class="card" style="text-align: center;">
+    <a href="/" class="btn">Return to Main App</a>
+  </div>
+
+  <script>
+    // You can add debugging helpers here if needed
+    console.log('Debug page loaded');
+  </script>
+</body>
+</html>

@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sandbagger Basic Version</title>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f9fafb;
+      color: #1f2937;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      padding: 10px 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo img {
+      width: 40px;
+      height: 40px;
+    }
+    .logo-text {
+      font-weight: bold;
+      font-size: 24px;
+      color: #15803d;
+    }
+    .user-info {
+      display: none;
+      align-items: center;
+      gap: 10px;
+    }
+    .auth-section {
+      background-color: white;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      max-width: 400px;
+      margin: 40px auto;
+    }
+    .auth-title {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 24px;
+      color: #15803d;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    button {
+      cursor: pointer;
+      padding: 10px 15px;
+      background-color: #15803d;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      font-weight: 500;
+      width: 100%;
+      margin-top: 10px;
+    }
+    button:hover {
+      background-color: #166534;
+    }
+    .auth-toggle {
+      text-align: center;
+      margin-top: 20px;
+      color: #6b7280;
+    }
+    .auth-toggle button {
+      background: none;
+      border: none;
+      color: #15803d;
+      cursor: pointer;
+      font-weight: 500;
+      padding: 0;
+      width: auto;
+      margin: 0 0 0 5px;
+    }
+    .auth-toggle button:hover {
+      text-decoration: underline;
+      background: none;
+    }
+    .logout-btn {
+      background-color: #ef4444;
+      padding: 8px 12px;
+      font-size: 14px;
+    }
+    .logout-btn:hover {
+      background-color: #dc2626;
+    }
+    .error-message {
+      color: #ef4444;
+      margin-top: 15px;
+      text-align: center;
+    }
+    .dashboard {
+      display: none;
+    }
+    .dashboard-title {
+      font-size: 24px;
+      margin-bottom: 20px;
+      color: #15803d;
+    }
+    .dashboard-card {
+      background-color: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    .dashboard-card h3 {
+      margin-top: 0;
+      color: #15803d;
+    }
+    .btn-primary {
+      display: inline-block;
+      background-color: #15803d;
+      padding: 10px 15px;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      margin-top: 15px;
+    }
+    .player-list {
+      margin-top: 20px;
+    }
+    .player-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .add-player-form {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    .add-player-form input {
+      flex: 1;
+    }
+    .add-player-form button {
+      width: auto;
+      margin-top: 0;
+    }
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100px;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(21, 128, 61, 0.1);
+      border-radius: 50%;
+      border-top-color: #15803d;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+        <img src="/icons/icon-192x192.png" alt="Sandbagger Logo">
+        <span class="logo-text">Sandbagger</span>
+      </div>
+      <div class="user-info" id="userInfo">
+        <span id="userName">User Name</span>
+        <button class="logout-btn" id="logoutButton">Log Out</button>
+      </div>
+    </header>
+
+    <div id="authSection" class="auth-section">
+      <h2 class="auth-title" id="authTitle">Log In</h2>
+      
+      <div id="errorMessage" class="error-message"></div>
+      
+      <form id="authForm">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" required>
+        </div>
+        
+        <div class="form-group" id="displayNameGroup" style="display: none;">
+          <label for="displayName">Name</label>
+          <input type="text" id="displayName">
+        </div>
+        
+        <button type="submit" id="submitButton">Log In</button>
+      </form>
+      
+      <div class="auth-toggle">
+        <span id="toggleText">Don't have an account?</span>
+        <button id="toggleButton">Sign Up</button>
+      </div>
+    </div>
+    
+    <div id="dashboard" class="dashboard">
+      <h2 class="dashboard-title">Welcome to Sandbagger</h2>
+      
+      <div class="dashboard-card">
+        <h3>Players</h3>
+        <div id="playerList" class="player-list">
+          <div class="loading">
+            <div class="spinner"></div>
+          </div>
+        </div>
+        
+        <div class="add-player-form">
+          <input type="text" id="playerName" placeholder="Player name">
+          <input type="number" id="handicap" placeholder="Handicap" min="0" max="36" step="0.1">
+          <button id="addPlayerButton">Add Player</button>
+        </div>
+      </div>
+      
+      <div class="dashboard-card">
+        <h3>Start New Round</h3>
+        <p>Set up your players above and start a new golf round.</p>
+        <button id="startRoundButton" class="btn-primary">Start Round</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Firebase configuration
+    const firebaseConfig = {
+      projectId: "sandbagger-d6c1f",
+      appId: "1:529457195015:web:6b71222798fd8b8eaea2a2",
+      storageBucket: "sandbagger-d6c1f.firebasestorage.app",
+      apiKey: "AIzaSyAXlJzyc7j9OIzoB4rnb-6ulwlC_OmHu1M",
+      authDomain: "sandbagger-d6c1f.firebaseapp.com",
+      messagingSenderId: "529457195015",
+      measurementId: "G-MWCTNE4180"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    
+    // DOM elements
+    const authSection = document.getElementById('authSection');
+    const dashboard = document.getElementById('dashboard');
+    const userInfo = document.getElementById('userInfo');
+    const userName = document.getElementById('userName');
+    const authTitle = document.getElementById('authTitle');
+    const authForm = document.getElementById('authForm');
+    const email = document.getElementById('email');
+    const password = document.getElementById('password');
+    const displayNameGroup = document.getElementById('displayNameGroup');
+    const displayName = document.getElementById('displayName');
+    const submitButton = document.getElementById('submitButton');
+    const toggleText = document.getElementById('toggleText');
+    const toggleButton = document.getElementById('toggleButton');
+    const errorMessage = document.getElementById('errorMessage');
+    const logoutButton = document.getElementById('logoutButton');
+    const playerList = document.getElementById('playerList');
+    const playerName = document.getElementById('playerName');
+    const handicap = document.getElementById('handicap');
+    const addPlayerButton = document.getElementById('addPlayerButton');
+    const startRoundButton = document.getElementById('startRoundButton');
+    
+    // Authentication state
+    let isLoginMode = true;
+    let players = [];
+    let currentUser = null;
+    
+    // Toggle between login and signup
+    toggleButton.addEventListener('click', () => {
+      isLoginMode = !isLoginMode;
+      
+      if (isLoginMode) {
+        authTitle.textContent = 'Log In';
+        submitButton.textContent = 'Log In';
+        toggleText.textContent = "Don't have an account?";
+        toggleButton.textContent = 'Sign Up';
+        displayNameGroup.style.display = 'none';
+      } else {
+        authTitle.textContent = 'Sign Up';
+        submitButton.textContent = 'Sign Up';
+        toggleText.textContent = 'Already have an account?';
+        toggleButton.textContent = 'Log In';
+        displayNameGroup.style.display = 'block';
+      }
+      
+      errorMessage.textContent = '';
+    });
+    
+    // Handle form submission
+    authForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const emailValue = email.value.trim();
+      const passwordValue = password.value.trim();
+      const displayNameValue = displayName.value.trim();
+      
+      errorMessage.textContent = '';
+      submitButton.disabled = true;
+      
+      try {
+        if (isLoginMode) {
+          // Login
+          await auth.signInWithEmailAndPassword(emailValue, passwordValue);
+        } else {
+          // Sign up
+          if (!displayNameValue) {
+            throw new Error('Please enter your name');
+          }
+          
+          // Create user
+          const userCredential = await auth.createUserWithEmailAndPassword(emailValue, passwordValue);
+          
+          // Update profile
+          await userCredential.user.updateProfile({
+            displayName: displayNameValue
+          });
+          
+          // Create user document
+          await db.collection('users').doc(userCredential.user.uid).set({
+            displayName: displayNameValue,
+            email: emailValue,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            handicap: 0,
+            friends: [],
+            pendingFriendRequests: []
+          });
+        }
+      } catch (error) {
+        errorMessage.textContent = error.message;
+        submitButton.disabled = false;
+      }
+    });
+    
+    // Logout
+    logoutButton.addEventListener('click', () => {
+      auth.signOut();
+    });
+    
+    // Add player
+    addPlayerButton.addEventListener('click', () => {
+      const name = playerName.value.trim();
+      const handicapValue = parseFloat(handicap.value) || 0;
+      
+      if (!name) return;
+      
+      players.push({
+        name,
+        handicap: handicapValue
+      });
+      
+      renderPlayers();
+      
+      playerName.value = '';
+      handicap.value = '';
+    });
+    
+    // Start round button
+    startRoundButton.addEventListener('click', async () => {
+      if (players.length === 0) {
+        alert('Please add at least one player');
+        return;
+      }
+      
+      try {
+        startRoundButton.disabled = true;
+        
+        const scores = {};
+        players.forEach(player => {
+          scores[player.name] = Array(18).fill(0);
+        });
+        
+        const courseData = {
+          name: 'Sample Golf Course',
+          par: [4, 5, 3, 4, 4, 5, 3, 4, 4, 4, 5, 3, 4, 4, 5, 3, 4, 4],
+          handicap: [7, 1, 15, 5, 11, 3, 17, 13, 9, 8, 2, 16, 6, 12, 4, 18, 14, 10]
+        };
+        
+        // Create round document
+        const roundRef = await db.collection('rounds').add({
+          players,
+          scores,
+          bets: [],
+          createdBy: currentUser.uid,
+          playerIds: players.reduce((acc, player) => {
+            acc[player.name] = currentUser.uid;
+            return acc;
+          }, {}),
+          course: courseData,
+          courseName: courseData.name,
+          date: new Date().toISOString(),
+          playerUids: [currentUser.uid],
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        alert('Round created! In the full app, you would be redirected to the scorecard.');
+        startRoundButton.disabled = false;
+      } catch (error) {
+        console.error('Error creating round:', error);
+        alert('Failed to create round: ' + error.message);
+        startRoundButton.disabled = false;
+      }
+    });
+    
+    // Render players
+    function renderPlayers() {
+      if (players.length === 0) {
+        playerList.innerHTML = '<p>No players added yet. Add yourself and other players below.</p>';
+        return;
+      }
+      
+      playerList.innerHTML = '';
+      
+      players.forEach((player, index) => {
+        const playerItem = document.createElement('div');
+        playerItem.className = 'player-item';
+        
+        playerItem.innerHTML = `
+          <div>${player.name} (Handicap: ${player.handicap})</div>
+          <button class="remove-btn" data-index="${index}" style="background-color: #ef4444; width: auto; padding: 5px 10px;">Remove</button>
+        `;
+        
+        playerList.appendChild(playerItem);
+      });
+      
+      // Add event listeners to remove buttons
+      document.querySelectorAll('.remove-btn').forEach(button => {
+        button.addEventListener('click', (e) => {
+          const index = parseInt(e.target.dataset.index);
+          players.splice(index, 1);
+          renderPlayers();
+        });
+      });
+    }
+    
+    // Check auth state
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        // User is signed in
+        currentUser = user;
+        userName.textContent = user.displayName || user.email;
+        userInfo.style.display = 'flex';
+        authSection.style.display = 'none';
+        dashboard.style.display = 'block';
+        
+        // Initialize with user as first player
+        if (players.length === 0) {
+          try {
+            const userDoc = await db.collection('users').doc(user.uid).get();
+            const userData = userDoc.data();
+            
+            if (userData) {
+              players.push({
+                name: userData.displayName || user.displayName || user.email,
+                handicap: userData.handicap || 0
+              });
+            } else {
+              players.push({
+                name: user.displayName || user.email,
+                handicap: 0
+              });
+            }
+            
+            renderPlayers();
+          } catch (error) {
+            console.error('Error getting user data:', error);
+            players.push({
+              name: user.displayName || user.email,
+              handicap: 0
+            });
+            renderPlayers();
+          }
+        }
+      } else {
+        // User is signed out
+        currentUser = null;
+        userInfo.style.display = 'none';
+        authSection.style.display = 'block';
+        dashboard.style.display = 'none';
+        players = [];
+      }
+      
+      // Reset form
+      authForm.reset();
+      submitButton.disabled = false;
+      errorMessage.textContent = '';
+    });
+  </script>
+</body>
+</html>

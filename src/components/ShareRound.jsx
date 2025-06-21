@@ -2,16 +2,16 @@ import React, { useState } from 'react';
 
 function ShareRound({ roundId }) {
   const [copied, setCopied] = useState(false);
-  
+
   const shareUrl = `${window.location.origin}/round/${roundId}`;
-  
+
   const handleCopy = () => {
     navigator.clipboard.writeText(shareUrl).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 3000);
     });
   };
-  
+
   const handleShare = async () => {
     if (navigator.share) {
       try {
@@ -27,30 +27,30 @@ function ShareRound({ roundId }) {
       handleCopy();
     }
   };
-  
+
   return (
     <div className="share-section">
       <h4 className="info-card-header">Share Round</h4>
       <p>Share this link to let others view and update this scorecard in real-time:</p>
-      
+
       <div className="share-link">
-        <input 
-          type="text" 
-          value={shareUrl} 
-          readOnly 
+        <input
+          type="text"
+          value={shareUrl}
+          readOnly
           className="share-input"
           onClick={(e) => e.target.select()}
         />
-        <button 
-          onClick={handleCopy} 
+        <button
+          onClick={handleCopy}
           className="copy-btn"
         >
           {copied ? 'Copied!' : 'Copy'}
         </button>
       </div>
-      
+
       {navigator.share && (
-        <button 
+        <button
           onClick={handleShare}
           className="btn"
         >

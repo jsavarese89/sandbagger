@@ -1,0 +1,135 @@
+<\!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sandbagger - Development Mode</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    .container {
+      max-width: 600px;
+      background: white;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    h1 {
+      color: #15803d;
+      margin-top: 0;
+    }
+    .logo {
+      width: 100px;
+      height: 100px;
+      margin-bottom: 20px;
+    }
+    p {
+      line-height: 1.6;
+      color: #333;
+      margin-bottom: 20px;
+    }
+    .buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 30px;
+    }
+    .btn {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 4px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .btn-primary {
+      background-color: #15803d;
+      color: white;
+    }
+    .btn-secondary {
+      background-color: #e5e7eb;
+      color: #1f2937;
+    }
+    .code {
+      background: #f1f5f9;
+      padding: 15px;
+      border-radius: 4px;
+      text-align: left;
+      font-family: monospace;
+      margin: 20px 0;
+      overflow-x: auto;
+      color: #334155;
+    }
+    .error-details {
+      border-left: 4px solid #ef4444;
+      padding-left: 15px;
+      margin: 20px 0;
+      text-align: left;
+      background: #fef2f2;
+      padding: 15px;
+      border-radius: 4px;
+    }
+    .note {
+      font-size: 14px;
+      color: #64748b;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="/icons/icon-192x192.png" alt="Sandbagger Logo" class="logo">
+    <h1>Sandbagger Development Mode</h1>
+    
+    <p>You're seeing this page because there's a React hooks error in your application. The specific error is:</p>
+    
+    <div class="error-details">
+      <strong>Error #310:</strong> React hooks must be called in the exact same order in every component render.
+    </div>
+    
+    <p>This usually happens when hooks are:</p>
+    <ul style="text-align: left;">
+      <li>Called inside conditional statements (if/else blocks)</li>
+      <li>Called inside loops</li>
+      <li>Called after early returns</li>
+    </ul>
+    
+    <div class="code">
+      // 🔴 Wrong: hook inside conditional<br>
+      if (someCondition) {<br>
+        &nbsp;&nbsp;useState(initialState);<br>
+      }<br><br>
+      
+      // ✅ Right: hooks at the top level<br>
+      const [state, setState] = useState(initialState);<br>
+      if (someCondition) {<br>
+        &nbsp;&nbsp;// use the state here<br>
+      }
+    </div>
+    
+    <p>To fix this issue:</p>
+    <ol style="text-align: left;">
+      <li>Check components that use hooks (especially in PlayerManagement and MainApp)</li>
+      <li>Ensure all hooks are called at the top level of your component</li>
+      <li>Don't put hooks inside conditionals, loops, or nested functions</li>
+    </ol>
+    
+    <div class="buttons">
+      <a href="/reset.html" class="btn btn-primary">Reset App & Clear Cache</a>
+      <a href="/" class="btn btn-secondary">Return to App</a>
+    </div>
+    
+    <p class="note">For more information, see the <a href="https://reactjs.org/docs/hooks-rules.html" target="_blank" rel="noopener noreferrer">Rules of Hooks</a> in the React documentation.</p>
+  </div>
+</body>
+</html>

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
+
 import { useAuth } from '../../contexts/AuthContext';
-import { 
-  getUserFriends, 
-  getPendingFriendRequests, 
+import {
+  getUserFriends,
+  getPendingFriendRequests,
   sendFriendRequest,
   acceptFriendRequest,
-  declineFriendRequest
+  declineFriendRequest,
 } from '../../firebase';
 
 function FriendsList() {
@@ -22,13 +23,13 @@ function FriendsList() {
 
   const loadFriendsAndRequests = async () => {
     if (!currentUser) return;
-    
+
     setLoading(true);
-    
+
     try {
       const friendsData = await getUserFriends(currentUser.uid);
       setFriends(friendsData);
-      
+
       const requestsData = await getPendingFriendRequests(currentUser.uid);
       setPendingRequests(requestsData);
     } catch (error) {
@@ -41,15 +42,15 @@ function FriendsList() {
 
   const handleSendRequest = async (e) => {
     e.preventDefault();
-    
+
     if (!email.trim()) {
       setMessage({ text: 'Please enter an email address', type: 'error' });
       return;
     }
-    
+
     setLoading(true);
     setMessage({ text: '', type: '' });
-    
+
     try {
       await sendFriendRequest(currentUser.uid, email);
       setEmail('');
@@ -64,7 +65,7 @@ function FriendsList() {
 
   const handleAcceptRequest = async (senderId) => {
     setLoading(true);
-    
+
     try {
       await acceptFriendRequest(currentUser.uid, senderId);
       setMessage({ text: 'Friend request accepted!', type: 'success' });
@@ -79,7 +80,7 @@ function FriendsList() {
 
   const handleDeclineRequest = async (senderId) => {
     setLoading(true);
-    
+
     try {
       await declineFriendRequest(currentUser.uid, senderId);
       setMessage({ text: 'Friend request declined', type: 'success' });
@@ -103,26 +104,26 @@ function FriendsList() {
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
       <h2 className="text-2xl font-bold mb-6 text-green-700">Golf Buddies</h2>
-      
+
       {message.text && (
         <div className={`${message.type === 'error' ? 'bg-red-100 text-red-700 border-red-400' : 'bg-green-100 text-green-700 border-green-400'} border px-4 py-3 rounded mb-4`}>
           {message.text}
         </div>
       )}
-      
+
       <form onSubmit={handleSendRequest} className="mb-6">
         <h3 className="text-lg font-semibold mb-2">Add Golf Buddy</h3>
         <div className="flex space-x-2">
-          <input 
-            type="email" 
+          <input
+            type="email"
             placeholder="Enter email address"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="flex-1 p-2 border rounded"
             required
           />
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
             disabled={loading}
           >
@@ -130,7 +131,7 @@ function FriendsList() {
           </button>
         </div>
       </form>
-      
+
       {pendingRequests.length > 0 && (
         <div className="mb-6">
           <h3 className="text-lg font-semibold mb-2">Pending Requests</h3>
@@ -142,14 +143,14 @@ function FriendsList() {
                   <p className="text-sm text-gray-500">{request.senderEmail}</p>
                 </div>
                 <div className="space-x-2">
-                  <button 
+                  <button
                     onClick={() => handleAcceptRequest(request.senderId)}
                     className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 transition"
                     disabled={loading}
                   >
                     Accept
                   </button>
-                  <button 
+                  <button
                     onClick={() => handleDeclineRequest(request.senderId)}
                     className="bg-gray-200 text-gray-800 px-3 py-1 rounded text-sm hover:bg-gray-300 transition"
                     disabled={loading}
@@ -162,7 +163,7 @@ function FriendsList() {
           </div>
         </div>
       )}
-      
+
       <div>
         <h3 className="text-lg font-semibold mb-2">My Golf Buddies</h3>
         {friends.length === 0 ? (

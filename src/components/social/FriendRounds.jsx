@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+
 import { useAuth } from '../../contexts/AuthContext';
 import { getUserRounds, getUserById } from '../../firebase';
 
@@ -10,7 +11,7 @@ function FriendRounds() {
 
   useEffect(() => {
     if (!currentUser || !userProfile) return;
-    
+
     loadFriendRounds();
   }, [currentUser, userProfile]);
 
@@ -20,17 +21,17 @@ function FriendRounds() {
       setLoading(false);
       return;
     }
-    
+
     setLoading(true);
     setError('');
-    
+
     try {
       // For each friend, get their user data and recent rounds
       const friendsWithRounds = [];
-      
+
       for (const friendId of userProfile.friends) {
         const friendData = await getUserById(friendId);
-        
+
         // Use a promise to get rounds asynchronously
         const roundsPromise = new Promise((resolve) => {
           const unsubscribe = getUserRounds(friendId, (rounds) => {
@@ -38,18 +39,18 @@ function FriendRounds() {
             const friendRounds = rounds.map(round => ({
               ...round,
               friendName: friendData.displayName,
-              friendId
+              friendId,
             }));
-            
+
             unsubscribe(); // Unsubscribe after getting the data
             resolve(friendRounds);
           });
         });
-        
+
         const friendRounds = await roundsPromise;
         friendsWithRounds.push(...friendRounds);
       }
-      
+
       // Sort rounds by creation date, newest first
       friendsWithRounds.sort((a, b) => {
         // Handle serverTimestamp conversion
@@ -57,7 +58,7 @@ function FriendRounds() {
         const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
         return bTime - aTime;
       });
-      
+
       setFriendRounds(friendsWithRounds);
     } catch (error) {
       console.error('Error loading friend rounds:', error);
@@ -69,14 +70,14 @@ function FriendRounds() {
 
   const formatDate = (timestamp) => {
     if (!timestamp) return 'Unknown date';
-    
+
     // Convert Firebase timestamp to JavaScript Date
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    
+
     return date.toLocaleDateString(undefined, {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
@@ -96,16 +97,16 @@ function FriendRounds() {
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
       <h2 className="text-2xl font-bold mb-6 text-green-700">Friend Rounds</h2>
-      
+
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
           {error}
         </div>
       )}
-      
+
       {loading ? (
         <div className="flex justify-center items-center h-48">
-          <div className="spinner"></div>
+          <div className="spinner" />
         </div>
       ) : friendRounds.length === 0 ? (
         <p className="text-gray-500">No friend rounds found. Add some golf buddies to see their rounds!</p>
@@ -120,14 +121,14 @@ function FriendRounds() {
                     <span className="font-medium">{round.friendName}</span> • {formatDate(round.createdAt)}
                   </p>
                 </div>
-                <button 
+                <button
                   onClick={() => handleJoinRound(round.id)}
                   className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 transition"
                 >
                   Join Round
                 </button>
               </div>
-              
+
               <div className="mt-3 grid grid-cols-2 gap-2">
                 {round.players && round.players.map((player, idx) => (
                   <div key={idx} className="text-sm">
